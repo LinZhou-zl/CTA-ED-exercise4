@@ -42,7 +42,7 @@ We first take a sample from these data to speed up the runtime of some of the an
 
 ```{r}
 tweets <- tweets %>%
-  sample_n(20000)
+  sample_n(20000)  #该 sample_n() 函数从数据框 tweets 中随机抽样，选择20,000行。
 ```
 
 ## Construct `dfm` object
@@ -54,13 +54,13 @@ Then, as in the previous exercise, we create a corpus object, specify the docume
 tweets_corpus <- corpus(tweets, text_field = "text")
 
 #add in username document-level information
-docvars(tweets_corpus, "newspaper") <- tweets$user_username
+docvars(tweets_corpus, "newspaper") <- tweets$user_username  #推文的用户名被添加为变量名称“newspaper”下的文档级信息。
 
 dfm_tweets <- dfm(tokens(tweets_corpus,
                     remove_punct = TRUE)) %>%
   dfm_select(pattern = stopwords("english"), 
              selection = "remove",
-             valuetype = "fixed")
+             valuetype = "fixed") #提取 tweets_corpus 的标记创建一个文档特征矩阵 （ dfm_tweets ）
 ```
 
 We can then have a look at the number of documents (tweets) we have per newspaper Twitter account. 
@@ -95,9 +95,9 @@ dfm_newstweets <- dfm_trim(dfm_newstweets,
 dim(dfm_newstweets)
 
 #### estimate the Wordfish model ####
-set.seed(123L)
+set.seed(123L)  #为可重复性奠定了基础，确保随机过程的结果在不同的代码运行中保持不变。
 dfm_newstweets_results <- textmodel_wordfish(dfm_newstweets, 
-                                             sparse = TRUE)
+                                             sparse = TRUE) #sparse=TRUE指定应使用稀疏矩阵估计模型以提高计算效率。
 
 ```
 
@@ -124,21 +124,21 @@ textplot_scale1d(dfm_newstweets_results, margin = "features")
 ```
 
 And we can also look at these features.
-
+此代码片段实质上会生成一个表格，其中显示了具有最高 beta 值的前 20 个特征（单词或术语），这些特征表示它们在 Wordfish 模型中的重要性或关联。
 ```{r}
 
-features <- dfm_newstweets_results[["features"]]
+features <- dfm_newstweets_results[["features"]]  #从Wordfish模型结果中提取特征（即单词或术语），并将它们分配给变量 features
 
-betas <- dfm_newstweets_results[["beta"]]
+betas <- dfm_newstweets_results[["beta"]]  #与每个特征相关的 beta 值（系数）是从 Wordfish 模型结果中提取并存储在变量 betas 中
 
-feat_betas <- as.data.frame(cbind(features, betas))
-feat_betas$betas <- as.numeric(feat_betas$betas)
+feat_betas <- as.data.frame(cbind(features, betas))  #将features和 beta 组合到一个名为 feat_betas using 的数据 cbind() 框中
+feat_betas$betas <- as.numeric(feat_betas$betas)  #转换为数值类型
 
 feat_betas %>%
   arrange(desc(betas)) %>%
   top_n(20) %>% 
   kbl() %>%
-  kable_styling(bootstrap_options = "striped")
+  kable_styling(bootstrap_options = "striped")  #根据 betas 列按降序排列数据框 feat_betas ，选择前 20 行，然后使用 kableExtra 包中的 kbl() 函数将其格式化为表。最后，它使用 kable_styling() 将引导样式应用于表。
 
 ```
 
@@ -172,4 +172,34 @@ dim(kaneko_dfm_study1)
 ## Exercises
 
 1. Estimate a wordfish model for the @kaneko_estimating_2021 data
+```{r}
+# estimate the Wordfish model
+set.seed(123L)
+kaneko_dfm_study1_results <- textmodel_wordfish(kaneko_dfm_study1, 
+                                             sparse = TRUE)
+#this is what results
+summary(kaneko_dfm_study1_results)
+
+#plot estimates of the θ
+textplot_scale1d(kaneko_dfm_study1_results)
+```
 2. Visualize the results
+```{r}
+#Plotting the “features”
+textplot_scale1d(kaneko_dfm_study1_results, margin = "features")
+```
+
+```{r}
+features <- kaneko_dfm_study1_results[["features"]]
+
+betas <- kaneko_dfm_study1_results[["beta"]]
+
+feat_betas <- as.data.frame(cbind(features, betas))
+feat_betas$betas <- as.numeric(feat_betas$betas)
+
+feat_betas %>%
+  arrange(desc(betas)) %>%
+  top_n(20) %>% 
+  kbl() %>%
+  kable_styling(bootstrap_options = "striped")
+```
